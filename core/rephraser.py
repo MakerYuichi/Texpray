@@ -2,8 +2,9 @@ import openai
 import os
 from dotenv import load_dotenv
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../.env'))
-openai.api_key = ""  # Replace with your actual key
+load_dotenv(dotenv_path="./.env")
+
+openai.api_key = os.getenv("OPENAI_API_KEY") # Replace with your actual key
 
 def rephrase_text(text: str) -> list:
     system_prompt = (
