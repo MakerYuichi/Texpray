@@ -1,7 +1,8 @@
 from core.toxicity_detector import detect_toxicity
 from core.rephraser import rephrase_text
+from models.pydantic import ModerationResponse
 
-def moderate_text(mssg:str):
+def moderate_text(mssg:str) -> ModerationResponse:
     score, label = detect_toxicity(mssg)
     
     

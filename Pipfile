@@ -8,12 +8,21 @@ fastapi = "*"
 uvicorn = "*"
 requests = "*"
 transformers = "*"
-torch = "*"
 protobuf = "*"
 sentencepiece = "*"
 accelerate = "*"
+torchvision = "*"
+torchaudio = "*"
+torch = "*"
+bitsandbytes = "*"
+openai = "*"
+hf-xet = "*"
+huggingface-hub = {extras = ["hf_xet"], version = "*"}
 
 [dev-packages]
 
 [requires]
 python_version = "3.11"
+
+[pipenv]
+allow_prereleases = true

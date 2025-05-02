@@ -1,17 +1,37 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+import openai
+import os
 
-model_name = "google/gemma-7b-it"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name, device_map = "auto", torch_dtype = "auto")
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../.env'))
+openai.api_key = ""  # Replace with your actual key
 
-rephraser = pipeline("text-generation", model=model, tokenizer=tokenizer)
+def rephrase_text(text: str) -> list:
+    system_prompt = (
+        "You are a helpful assistant that rewrites messages to be kind, respectful, and non-toxic, "
+        "while keeping the original intent intact."
+    )
 
+    user_prompt = f"Rewrite this to be non-toxic and kind, without losing intent:\n\n{text}"
 
-def rephrase_text(text:str) -> str:
-    prompt = f"""<s>[INST] Rewrite the following text to be kind, respectful, and non-toxic, while preserving the original intent: 
-    Original: {text}
-    Rephrased version: [/INST]"""
-    output = rephraser(prompt, max_new_tokens=100, num_return_sequences = 3, num_beams=10, do_sample = True, top_k = 50)
-    suggestions = [o["generated_text"].replace("prompt", "").strip() for o in output]
-    return suggestions 
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # or "gpt-4" if you have access
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=0.7,
+            max_tokens=100,
+            n=3  # Return 3 suggestions
+        )
 
+        suggestions = [choice["message"]["content"].strip() for choice in response["choices"]]
+        return suggestions
+
+    except Exception as e:
+        print(f"OpenAI API Error: {e}")
+        return ["(Rephrasing failed)"]
+
+# Example usage
+if __name__ == "__main__":
+    result = rephrase_text("You're so dumb and annoying.")
+    print("Suggestions:\n", *result, sep="\n- ")
