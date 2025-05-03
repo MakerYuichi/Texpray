@@ -17,7 +17,7 @@ torch = "*"
 bitsandbytes = "*"
 openai = "*"
 hf-xet = "*"
-huggingface-hub = {extras = ["hf_xet"], version = "*"}
+huggingface-hub = "*"
 
 [dev-packages]
 
