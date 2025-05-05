@@ -1,70 +1,55 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from database import get_db
-from sqlalchemy.future import select
-from models.karma import dailyKarma, refresh_karma
-from models.pydantic import Message, ModerationResponse
-from core.toxicity_detector import detect_toxicity
+from models.pydantic import Message, ModerationResponse, ReflectionDecision
+from utils.moderation import moderate_text
+from models.reflection import pendingReflection
 from core.rephraser import rephrase_text
-
+from models.reflection_window import handle_reflection_action
+from uuid import UUID
 
 app = FastAPI()
 
-
 @app.post("/moderate", response_model=ModerationResponse)
 async def moderate_message(message: Message, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(dailyKarma).where(dailyKarma.user_id == str(message.user_id)))
-    score, status = detect_toxicity(message.mssg)
-    user_karma = result.scalars().first()
-    modified = False
+    return await moderate_text(message.user_id, message.mssg, db)
 
-    if not user_karma:
-        user_karma = dailyKarma(user_id=message.user_id)
-        db.add(user_karma)
-        modified = True
 
-    if refresh_karma(user_karma):
-        modified = True
-
-    suggestion = None
-    alternatives = None
+@app.get("/reflect/{reflection_id}/alternatives")
+async def get_alternatives(reflection_id: UUID, db: AsyncSession=Depends(get_db)):
+    result = await db.execute(
+        select(pendingReflection).where(pendingReflection.reflection_id == reflection_id)
+    ) 
+    reflection = result.scalars().first()
     
+    if not reflection:
+        raise HTTPException(status_code=404, detail="Reflection not found")
     
-    if status == 'toxic':
-        user_karma.karma -= 1.0
-        modified = True
+    try:
+        rephrased = rephrase_text(reflection.original_message)
+        cleaned = [alt.strip('"') for alt in rephrased[1:3]]
+        return {"alternatives": cleaned}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to Rephrase: {e}")
+    
 
-        try:
-            rephrased = rephrase_text(message.mssg)
-            suggestion = rephrased[0] if len(rephrased) > 0 else None
-            alternatives = rephrased[1:3] if len(rephrased) > 1 else []
-        except Exception as e:
-            print(f"Rephrasing failed: {e}")
-            
-    else:
-        if user_karma.boost_count is None:
-            user_karma.boost_count = 0
-            modified = True
-            
-        if user_karma.boost_count < 6:
-            user_karma.karma += 0.25
-            user_karma.boost_count += 1
-            print(user_karma.boost_count)
-            modified = True
-            
-            
-
-    if modified:
-        await db.commit()
-
-    return ModerationResponse(
-        user_id=message.user_id,
-        original=message.mssg,
-        toxicity_score=score,
-        status=status,
-        karma=user_karma.karma,
-        suggestion=suggestion,
-        alternatives=alternatives
-    )
-
+@app.post("/reflect/{reflection_id}")
+async def process_reflection(reflection_id: UUID, decision: ReflectionDecision, db:AsyncSession=Depends(get_db)):
+    try:
+        result = await handle_reflection_action(
+            db=db,
+            reflection_id = reflection_id,
+            user_id=decision.user_id,
+            action=decision.action.value
+        )
+        return result
+    
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Server Error:  {str(e)}")
+  
     

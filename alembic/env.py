@@ -5,7 +5,8 @@ from logging.config import fileConfig
 import os
 from dotenv import load_dotenv
 from models import Base
-from models.karma import dailyKarma # Update this to your model path
+from models.karma import dailyKarma 
+from models.reflection import pendingReflection# Update this to your model path
 
 # Load .env variables
 load_dotenv()
