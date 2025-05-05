@@ -27,7 +27,7 @@ class ModerationResponse(BaseModel):
     
 class ReflectAction(str, Enum):
     sends_suggestion= "sends_suggestion"
-    sends_anyway= "send_anyway"
+    sends_anyway= "sends_anyway"
     discard= "discard" 
     
 class ReflectionDecision(BaseModel):

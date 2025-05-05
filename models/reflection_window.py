@@ -29,10 +29,10 @@ async def handle_reflection_action(
     db.add(response)
     
     final_message = None
-    if action == "send_suggestion" and reflection.suggestion:
+    if action == "sends_suggestion" and reflection.suggestion:
         final_message = reflection.suggestion
         
-    elif action == "send_anyway":
+    elif action == "sends_anyway":
         final_message = reflection.original_message
         
     await db.commit()
