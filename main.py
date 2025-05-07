@@ -5,9 +5,11 @@ from database import get_db
 from models.pydantic import Message, ModerationResponse, ReflectionDecision
 from utils.moderation import moderate_text
 from models.reflection import pendingReflection
+from models.karma import dailyKarma
 from core.rephraser import rephrase_text
 from models.reflection_window import handle_reflection_action
 from uuid import UUID
+
 
 app = FastAPI()
 
@@ -51,5 +53,16 @@ async def process_reflection(reflection_id: UUID, decision: ReflectionDecision, 
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Server Error:  {str(e)}")
+    
+    
+@app.get("/karma/{user_id}")
+async def get_karma(user_id: str, db: AsyncSession=Depends(get_db)):
+    result = await db.execute(select(dailyKarma).where(dailyKarma.user_id==user_id))
+    user_karma = result.scalars().first()
+    
+    if not user_karma:
+        raise HTTPException(status_code=404, detail="No karma score")
+    return {"user_id": user_id, "user_karma": user_karma.karma}
+    
   
     
