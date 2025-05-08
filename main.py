@@ -13,6 +13,10 @@ from uuid import UUID
 
 app = FastAPI()
 
+@app.get("/")
+def read_root():
+    return {"message": "Server is running"}
+
 @app.post("/moderate", response_model=ModerationResponse)
 async def moderate_message(message: Message, db: AsyncSession = Depends(get_db)):
     return await moderate_text(message.user_id, message.mssg, db)
