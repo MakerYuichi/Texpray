@@ -6,7 +6,9 @@ import os
 from dotenv import load_dotenv
 from models import Base
 from models.karma import dailyKarma 
-from models.reflection import pendingReflection# Update this to your model path
+from models.reflection import pendingReflection
+from models.user import Users
+# Update this to your model path
 
 # Load .env variables
 load_dotenv()

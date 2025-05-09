@@ -1,11 +1,12 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String, Float, DateTime, func, Integer
+from sqlalchemy import Column, String, Float, DateTime, func, Integer, ForeignKey
 from datetime import datetime, timezone, timedelta
 from models import Base
 
 class dailyKarma(Base):
     __tablename__ = "karma_score"
-    user_id = Column(String, primary_key=True, index = True)
+    
+    user_id = Column(String, ForeignKey("users.user_id"), primary_key=True, index = True)
     karma = Column(Float, default=8.0)
     last_reset = Column(DateTime(timezone=True), default=func.now())
     previous_karma = Column(Float, default=8.0)

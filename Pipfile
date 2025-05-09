@@ -19,6 +19,15 @@ sqlalchemy = {extras = ["asyncio"], version = "*"}
 torch = "*"
 torchvision = "*"
 torchaudio = "*"
+authlib = "*"
+httpx = "*"
+bcrypt = "*"
+python-jose = {extras = ["cryptography"], version = "*"}
+passlib = {extras = ["bcrypt"], version = "*"}
+pyjwt = "*"
+fastapi-mail = "*"
+pytest = "*"
+pytest-asyncio = "*"
 
 [dev-packages]
 alembic = "*"

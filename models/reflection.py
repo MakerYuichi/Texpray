@@ -8,7 +8,7 @@ class pendingReflection(Base):
     __tablename__ = "pending_reflection"
     
     reflection_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(String, ForeignKey("karma_score.user_id"), nullable=False)
+    user_id = Column(String, ForeignKey("users.user_id"), nullable=False)
     original_message = Column(Text, nullable=False)
     suggestion = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now())
@@ -19,7 +19,7 @@ class reflectionResponse(Base):
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     reflection_id = Column(UUID(as_uuid=True), ForeignKey("pending_reflection.reflection_id"), nullable=False)
-    user_id = Column(String, ForeignKey("karma_score.user_id"), nullable=False)
+    user_id = Column(String, ForeignKey("users.user_id"), nullable=False)
     action = Column(Text)
     timestamp = Column(DateTime(timezone=True), default=func.now())
     
