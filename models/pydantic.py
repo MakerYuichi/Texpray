@@ -1,5 +1,5 @@
 from uuid import UUID
-from pydantic import BaseModel, EmailStr, field_validator, constr
+from pydantic import BaseModel, EmailStr, field_validator, constr, ConfigDict
 from typing import Optional, List
 import re
 from enum import Enum
@@ -63,8 +63,7 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
     
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
         
 class PasswordResetRequest(BaseModel):
     email: str

@@ -2,6 +2,7 @@ from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from pydantic import EmailStr
 from dotenv import load_dotenv
 import os
+from datetime import datetime
 
 load_dotenv()
 
@@ -11,12 +12,13 @@ conf = ConnectionConfig(
     MAIL_FROM = os.getenv("EMAIL_USER"),
     MAIL_PORT = 587,
     MAIL_SERVER="smtp.mail.yahoo.com",
-    MAIL_TLS = True,
-    MAIL_SSL = False,
+    MAIL_STARTTLS=True,
+    MAIL_SSL_TLS=False,
     USE_CREDENTIALS=True
 )
 
 async def send_reset_email(to_email: EmailStr, reset_link: str):
+    print(f"Sending email to {to_email} with link: {reset_link}")
     message = MessageSchema(
         subject="Action Required: Secure Your TexpRay Account",
         recipients=[to_email],
