@@ -9,7 +9,7 @@ from models.karma import dailyKarma
 from models.user import Users
 from core.rephraser import rephrase_text
 from models.reflection_window import handle_reflection_action
-from utils.auth import hashed_password, verify_password
+from utils.crypt import hashed_password, verify_password
 from utils.token import create_access_token, verify_access_token, create_reset_token
 from utils.emails import send_reset_email
 from uuid import UUID
