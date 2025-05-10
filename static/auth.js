@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (response.ok) {
           alert("Account created successfully! Please log in.");
-          window.location.href = "login.html"; // Redirect to login page
+          window.location.href = "https://texpray.onrender.com/login"; // Redirect to login page
         } else {
           alert(data.detail || "Error during registration.");
         }
@@ -95,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // Now fetch user karma
           try {
-            const karmaRes = await fetch(`https://texpray.onrender.com/karma/${data.user_id}`, {
+            const karmaRes = await fetch("https://texpray.onrender.com/karma/${data.user_id}", {
               method: "GET",
               headers: {
                 Authorization: `Bearer ${data.access_token}`,
@@ -148,7 +148,7 @@ if (forgotBtn && emailInput) {
     spinner.style.display = "inline"; // Show the spinner
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/forgot-password", {
+      const res = await fetch("https://texpray.onrender.com/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -171,7 +171,7 @@ if (forgotBtn && emailInput) {
   });
 }
 
-const token = "{{ token }}";  // This will be dynamically injected by FastAPI
+const token = window.resetToken;  // This will be dynamically injected by FastAPI
 
     if (!token) {
       alert("Invalid or missing token.");
@@ -202,19 +202,19 @@ const token = "{{ token }}";  // This will be dynamically injected by FastAPI
         }
 
         try {
-          const res = await fetch(`https://127.0.0.1:8000/reset-password?token=${token}`, {
+          const res = await fetch("https://texpray.onrender.com/reset-password", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ newPassword }),
+            body: JSON.stringify({ token, new_password: newPassword }),
           });
 
           const data = await res.json();
 
           if (res.ok) {
             alert("Your password has been reset successfully!");
-            window.location.href = "login.html"; // Redirect to login page
+            window.location.href = "https://texpray.onrender.com/login"; // Redirect to login page
           } else {
             alert(data.detail || "Error resetting password.");
           }
