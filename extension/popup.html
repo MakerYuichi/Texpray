@@ -1,21 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Texspray</title>
-  <link rel="stylesheet" href="popup.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Texpray Extension</title>
+  <link rel="stylesheet" href="popup.css"/>
 </head>
 <body>
-  <div id="auth-section">
-    <h2>Welcome to Texspray</h2>
-    <button id="login-btn">Sign In</button>
-    <button id="signup-btn">Sign Up</button>
-  </div>
+  <div class="container">
+    <!--<img src="icons/icon.png" alt="Texpray Logo" class="logo" />-->
 
-  <div id="karma-section" style="display: none;">
-    <p>You are signed in as <span id="user-id"></span></p>
-    <p>Your Karma: <strong id="karma-score">...</strong></p>
-    <button id="logout-btn">Log Out</button>
+    <!-- Welcome section for logged-in users -->
+    <div id="user-info" style="display: none;">
+      <h1 class="title">Welcome, <span id="user-name"></span>!</h1>
+      <p class="subtitle">Your AI-powered message assistant</p>
+      <p>Your Karma: <span id="karma-score">Loading...</span></p>
+
+      <div class="button-group">
+        <button id="logout-btn">Log Out</button>
+      </div>
+    </div>
+
+    <!-- Login/Signup Section for users who are not logged in -->
+    <div id="auth-info" style="display: block;">
+      <h1 class="title">Welcome to Texpray</h1>
+      <p class="subtitle">Your AI-powered message assistant</p>
+
+      <div class="button-group">
+        <button id="registerBtn">Create Account</button>
+        <button id="loginBtn" class="secondary">I already have an account</button>
+      </div>
+
+      <p class="footer">
+        Secure & Private · Built for Kind Conversations
+      </p>
+    </div>
   </div>
 
   <script src="popup.js"></script>

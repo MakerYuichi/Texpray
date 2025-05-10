@@ -28,6 +28,7 @@ fastapi-mail = "*"
 pytest = "*"
 pytest-asyncio = "*"
 fastapi = {extras = ["all"], version = "*"}
+jinja2 = "*"
 
 [dev-packages]
 alembic = "*"

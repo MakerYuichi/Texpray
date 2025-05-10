@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from database import get_db
@@ -11,11 +12,53 @@ from core.rephraser import rephrase_text
 from models.reflection_window import handle_reflection_action
 from utils.crypt import hashed_password, verify_password
 from utils.token import create_access_token, verify_access_token, create_reset_token
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from utils.emails import send_reset_email
+from fastapi.templating import Jinja2Templates
 from uuid import UUID
+from datetime import datetime, timezone, timedelta
+import os
 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["chrome-extension://aggabpfpgjggoaeeimenoofbicdbboep", "https://texpray.render.com", "http://localhost:8000", "http://127.0.0.1:8000"],  
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+if not os.path.exists("static"):
+    os.makedirs("static")
+    
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+
+@app.get("/register", response_class=HTMLResponse)
+async def get_register(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
+
+
+@app.get("/login", response_class=HTMLResponse)
+async def get_login(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+
+@app.get("/forgot-password", response_class=HTMLResponse)
+async def get_forgot_password(request: Request):
+    return templates.TemplateResponse("forgot.html", {"request": request})
+
+@app.get("/reset-password", response_class=HTMLResponse)
+async def get_reset_password(request: Request, token: str):
+    return templates.TemplateResponse("reset.html", {"request": request, "token": token})
+
+    
 
 @app.get("/")
 def read_root():
@@ -74,6 +117,11 @@ async def forgot_password(req: PasswordResetRequest, db: AsyncSession = Depends(
         raise HTTPException(status_code=404, detail= "If an account with that email exists, a reset link has been sent")
     
     token = create_reset_token(req.email)
+    expiry = datetime.now(timezone.utc) + timedelta(minutes=15)
+    user.reset_token = token
+    user.token_expiry = expiry.isoformat()
+    await db.commit()
+
     reset_link = f"http://texpray.onrender.com/reset-password?token={token}"
     await send_reset_email(req.email, reset_link=reset_link)
     return {"message": "If an account with that email exists, a reset link has been sent"}
@@ -89,7 +137,13 @@ async def reset_password(payload: PasswordReset, db: AsyncSession= Depends(get_d
         
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
+        
+        if (user.reset_token != payload.token or not user.token_expiry or datetime.fromisoformat(user.token_expiry) < datetime.now(timezone.utc)):
+            raise HTTPException(status_code=400, detail="Invalid or expired token")
+    
         user.hashed_password = hashed_password(payload.new_password)
+        user.reset_token=None
+        user.token_expiry=None
         await db.commit()
         return ({"message": "Password Reset Successful"})
     

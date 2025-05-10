@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reset Password – Texspray</title>
+  <link rel="stylesheet" href="/static/popup.css"/>
+</head>
+<body>
+  <div class="container">
+    <h2>Reset Your Password</h2>
+    <p>Enter a new password for your account.</p>
+
+    <input type="password" id="newPassword" placeholder="New Password" required />
+    <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
+
+    <button id="resetSubmit">Reset Password</button>
+
+    <p class="footer-link">
+      Remembered your password? <a href="https://texpray.onrender.com/login">Log in</a>
+    </p>
+  </div>
+
+  <script> window.resetToken = "{{ token }}"; </script>
+  <script src="/static/auth.js"></script>
+
+</body>
+</html>

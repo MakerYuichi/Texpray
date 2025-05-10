@@ -1,0 +1,111 @@
+body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    width: 300px;
+    text-align: center;
+    background-color: #fff;
+  }
+  
+  .container {
+    padding: 20px;
+  }
+  
+  .logo {
+    width: 48px;
+    margin-bottom: 10px;
+  }
+  
+  .title {
+    margin: 0;
+    font-size: 1.4em;
+    color: #333;
+  }
+  
+  .subtitle {
+    color: #666;
+    font-size: 0.9em;
+    margin-bottom: 20px;
+  }
+  
+  .button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  button {
+    padding: 10px;
+    font-size: 0.95em;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+  }
+  
+  #registerBtn {
+    background-color: #4f46e5;
+    color: white;
+  }
+  
+  .secondary {
+    background-color: #f3f4f6;
+    color: #111827;
+  }
+  
+  .footer {
+    font-size: 0.75em;
+    color: #999;
+    margin-top: 20px;
+  }
+  
+  input {
+    display: block;
+    width: 100%;
+    margin: 8px 0;
+    padding: 10px;
+    font-size: 0.95em;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+  }
+  
+  button {
+    margin-top: 10px;
+  }
+  
+  .footer-link {
+    margin-top: 15px;
+    font-size: 0.8em;
+  }
+  
+  button:hover {
+    opacity: 0.8;
+  }
+
+  input:focus, button:focus {
+    outline: 2px solid #4f46e5;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #4f46e5;
+  }
+
+  .message {
+    padding: 10px;
+    border-radius: 6px;
+    margin-top: 10px;
+    font-size: 0.95em;
+  }
+  
+  .success {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .error {
+    background-color: #f44336;
+    color: white;
+  }

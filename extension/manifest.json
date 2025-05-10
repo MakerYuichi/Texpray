@@ -1,29 +1,32 @@
 {
-    "manifest_version": 3,
-    "name": "Texpray",
-    "version": "1.0",
-    "description": "Deflects and reflects on toxic messages in real-time",
-    "permissions": ["scripting", "storage", "activeTab"],
-    "host_permissions": ["https://texpray.onrender.com/*"],
-    "content_scripts": [
-        {
-            "matches": ["*://*.teams.microsoft.com/*", "*://*.slack.com/*", "*://web.whatsapp.com/*"],
-            "js": ["content.js"], "css": ["ui/reflection_window.css"]
-        }
-    ],
-    "background": {"service_worker":"background.js"}, 
-    "action": {
-        "default_popup": "popup.html",
-        "default_icon": "icons/icon.png"
-    },
-
-    "web_accessible_resources": [
-  {
-    "resources": ["ui/reflection_window.css", "icons/icon.png"],
-    "matches": ["<all_urls>"]
+  "manifest_version": 3,
+  "name": "Texpray",
+  "version": "1.0",
+  "description": "Deflects and reflects on toxic messages in real-time",
+  "permissions": [
+    "scripting",
+    "storage",
+    "activeTab",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "https://texpray.onrender.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.teams.microsoft.com/*",
+        "*://*.slack.com/*",
+        "*://web.whatsapp.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
   }
-]
-
 }
-
- 
