@@ -6,7 +6,7 @@ from database import get_db
 from models.pydantic import Message, ModerationResponse, ReflectionDecision, UserCreate, UserLogin, PasswordReset, PasswordResetRequest, PasswordResetTokenData
 from utils.moderation import moderate_text
 from models.reflection import pendingReflection
-from models.karma import dailyKarma
+from models.karma import dailyKarma, refresh_karma
 from models.user import Users
 from core.rephraser import rephrase_text
 from models.reflection_window import handle_reflection_action
@@ -85,6 +85,11 @@ async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
     db.add(new_user)  
     await db.commit()
     await db.refresh(new_user)
+    
+    new_karma = dailyKarma(user_id = new_user.user_id)
+    db.add(new_karma)
+    await db.commit()
+    
     return {"message": "User registered successfully"}
 
 
@@ -98,6 +103,13 @@ async def login(user: UserLogin, db: AsyncSession=Depends(get_db)):
     
     if not db_user or not verify_password(user.password, db_user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    user_karma = await db.execute(select(dailyKarma).where(dailyKarma.user_id == db_user.user_id))
+    user_karma = user_karma.scalars().first()
+    
+    if user_karma:
+        if refresh_karma(user_karma):
+            await db.commit()
     
     access_token = create_access_token(data={"sub": str(db_user.user_id)})
     return {

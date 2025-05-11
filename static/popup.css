@@ -1,91 +1,114 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
 body {
   font-family: 'Segoe UI', sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background: linear-gradient(135deg, #afc9fc, #cfdef3);
-  color: #333;
-  position: relative;
-  overflow: hidden; /* Prevents overflow from background patterns */
+  margin: 0;
+  padding: 0;
+  width: 300px;
+  text-align: center;
+  background-color: #fff;
 }
 
 .container {
-  background-color: #ffffff;
-  padding: 40px;
-  width: 500px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  position: relative;
-  z-index: 2; /* Ensure container stays above background patterns */
+  padding: 20px;
 }
 
-h2 {
-  margin-bottom: 20px;
-  font-size: 1.8em;
-  color: #4f46e5;
+.logo {
+  width: 48px;
+  margin-bottom: 10px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.4em;
+  color: #111827;
   font-weight: 600;
+}
+
+.subtitle {
+  color: #6b7280;
+  font-size: 0.9em;
+  margin: 8px 0 16px 0;
+}
+
+#karma-score {
+  font-weight: bold;
+  color: #10b981;
+  font-size: 1.2em;
+}
+
+#fire-emoji {
+  font-size: 1.5em;
+  margin-left: 5px;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+button {
+  padding: 10px;
+  font-size: 0.95em;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#registerBtn {
+  background-color: #4f46e5;
+  color: white;
+}
+
+.secondary {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+#logout-btn {
+  background-color: #ef4444;
+  color: white;
+}
+
+#logout-btn:hover {
+  background-color: #dc2626;
+}
+
+.footer {
+  font-size: 0.75em;
+  color: #9ca3af;
+  margin-top: 25px;
 }
 
 input {
   display: block;
   width: 100%;
-  margin: 20px 0;
-  padding: 12px;
-  font-size: 1em;
+  margin: 8px 0;
+  padding: 10px;
+  font-size: 0.95em;
   border: 1px solid #ddd;
   border-radius: 6px;
-  transition: border-color 0.3s ease;
 }
 
-input:focus {
-  outline: none;
-  border-color: #4f46e5;
+input:focus, button:focus {
+  outline: 2px solid #4f46e5;
 }
 
-button {
-  padding: 12px;
-  font-size: 1.1em;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  background-color: #4f46e5;
-  color: white;
-  width: 50%;
-  transition: background-color 0.3s ease;
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-button:hover {
-  background-color: #0000e0;
-}
-
-.footer-link {
-  margin-top: 15px;
-  font-size: 0.9em;
-  color: #555;
-}
-
-.footer-link a {
-  color: #4f46e5;
-  text-decoration: none;
-}
-
-.footer-link a:hover {
-  text-decoration: underline;
+::-webkit-scrollbar-thumb {
+  background: #4f46e5;
+  border-radius: 4px;
 }
 
 .message {
   padding: 10px;
   border-radius: 6px;
-  margin-top: 15px;
-  font-size: 1em;
+  margin-top: 10px;
+  font-size: 0.95em;
 }
 
 .success {
@@ -96,33 +119,4 @@ button:hover {
 .error {
   background-color: #f44336;
   color: white;
-}
-
-/* Full Background Patterns */
-
-body::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, rgba(23, 13, 225, 0.1) 25%, transparent 10%) 20%,
-              linear-gradient(12deg, rgba(44, 84, 171, 0.1) 25%, transparent 10%) 20%;
-  background-size: 50px 50px;
-  z-index: 0;
-  opacity: 1;
-}
-
-/* Darker and Blurred Diagonal Lines */
-body::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: repeating-linear-gradient(45deg, rgba(0, 113, 242, 0.2) 0px, rgba(0, 72, 255, 0.2) 5px, transparent 0px, transparent 2px);
-  z-index: -1;
-  filter: blur(4px); /* Adding blur effect */
 }

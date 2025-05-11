@@ -12,14 +12,21 @@
 
     <!-- Welcome section for logged-in users -->
     <div id="user-info" style="display: none;">
-      <h1 class="title">Welcome, <span id="user-name"></span>!</h1>
-      <p class="subtitle">Your AI-powered message assistant</p>
-      <p>Your Karma: <span id="karma-score">Loading...</span></p>
+  <h1 class="title">Welcome, <span id="user-name"></span>!</h1>
+  <p class="subtitle">Your AI-powered message assistant</p>
+  <p class="subtitle">Your Karma:</p>
+  
+  <!-- Karma score and fire emoji on the same line -->
+  <p id="karma-and-fire">
+    <span id="karma-score">Loading...</span> 
+    <span id="fire-emoji">🔥</span>
+  </p>
 
-      <div class="button-group">
-        <button id="logout-btn">Log Out</button>
-      </div>
-    </div>
+  <div class="button-group">
+    <button id="logout-btn">Log Out</button>
+  </div>
+</div>
+
 
     <!-- Login/Signup Section for users who are not logged in -->
     <div id="auth-info" style="display: block;">

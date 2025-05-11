@@ -28,5 +28,11 @@
   },
   "action": {
     "default_popup": "popup.html"
+  },
+  "web_accessible_resources": [
+  {
+    "resources": ["auth/login.html", "auth/login.js", "auth/login.css"],
+    "matches": ["<all_urls>"]
   }
+]
 }

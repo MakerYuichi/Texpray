@@ -17,7 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Log registration data for debugging
       console.log("Registering data:", {
         first_name: firstName,
         last_name: lastName,
@@ -41,19 +40,19 @@ document.addEventListener("DOMContentLoaded", () => {
           }),
         });
 
-        console.log("Response Status:", response.status); // Log the response status
+        console.log("Response Status:", response.status);
         const data = await response.json();
-        console.log("Response Data:", data); // Log the response data
+        console.log("Response Data:", data);
 
         if (response.ok) {
           alert("Account created successfully! Please log in.");
-          window.location.href = "https://texpray.onrender.com/login"; // Redirect to login page
+          window.location.href = "https://texpray.onrender.com/login";
         } else {
           alert(data.detail || "Error during registration.");
         }
       } catch (error) {
         alert("An error occurred while creating the account.");
-        console.error(error); // Log the full error for debugging
+        console.error(error);
       }
     });
   } else {
@@ -68,7 +67,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
-      // Check if fields are empty
       if (!email || !password) {
         alert("Please fill in both fields.");
         return;
@@ -81,21 +79,19 @@ document.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify({ email, password }),
         });
 
-        console.log("Response Status:", res.status); // Log the response status
+        console.log("Response Status:", res.status);
         const data = await res.json();
-        console.log("Response Data:", data); // Log the response data
+        console.log("Response Data:", data);
 
         if (res.ok) {
-          // Store token and user details in Chrome local storage
           await chrome.storage.local.set({
             token: data.access_token,
             user_id: data.user_id,
             user_name: data.user_name,
           });
 
-          // Now fetch user karma
           try {
-            const karmaRes = await fetch("https://texpray.onrender.com/karma/${data.user_id}", {
+            const karmaRes = await fetch(`https://texpray.onrender.com/karma/${data.user_id}`, {
               method: "GET",
               headers: {
                 Authorization: `Bearer ${data.access_token}`,
@@ -110,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
               });
 
               alert("Login successful!");
-              window.close(); // Close login popup
+              window.close();
             } else {
               alert(karmaData.detail || "Failed to fetch user karma.");
             }
@@ -127,58 +123,56 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-const forgotBtn = document.getElementById("forgotSubmit");
-const emailInput = document.getElementById("email");
 
-if (forgotBtn && emailInput) {
-  const spinner = document.createElement('span');
-  spinner.innerText = "Sending...";
-  spinner.style.display = "none";
-  spinner.style.marginLeft = "10px";
-  forgotBtn.appendChild(spinner); // Add spinner next to the button text
+  // Forgot Password Logic
+  const forgotBtn = document.getElementById("forgotSubmit");
+  const emailInput = document.getElementById("email");
 
-  forgotBtn.addEventListener("click", async () => {
-    const email = emailInput.value.trim();
+  if (forgotBtn && emailInput) {
+    const spinner = document.createElement('span');
+    spinner.innerText = "Sending...";
+    spinner.style.display = "none";
+    spinner.style.marginLeft = "10px";
+    forgotBtn.appendChild(spinner);
 
-    if (!email) {
-      alert("Please enter your email address.");
-      return;
-    }
+    forgotBtn.addEventListener("click", async () => {
+      const email = emailInput.value.trim();
 
-    spinner.style.display = "inline"; // Show the spinner
-
-    try {
-      const res = await fetch("https://texpray.onrender.com/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await res.json();
-      spinner.style.display = "none"; // Hide the spinner
-
-      if (res.ok) {
-        alert("If an account with that email exists, a reset link has been sent.");
-        window.close(); // or window.location.href = "login.html";
-      } else {
-        alert(data.detail || "Error processing the request.");
+      if (!email) {
+        alert("Please enter your email address.");
+        return;
       }
-    } catch (err) {
-      console.error("Forgot password error:", err);
-      spinner.style.display = "none"; // Hide spinner on error
-      alert("Error connecting to server.");
-    }
-  });
-}
 
-const token = window.resetToken;  // This will be dynamically injected by FastAPI
+      spinner.style.display = "inline";
 
-    if (!token) {
-      alert("Invalid or missing token.");
-      return;
-    }
+      try {
+        const res = await fetch("https://texpray.onrender.com/forgot-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
 
-    // Continue with your reset password logic
+        const data = await res.json();
+        spinner.style.display = "none";
+
+        if (res.ok) {
+          alert("If an account with that email exists, a reset link has been sent.");
+          window.close();
+        } else {
+          alert(data.detail || "Error processing the request.");
+        }
+      } catch (err) {
+        console.error("Forgot password error:", err);
+        spinner.style.display = "none";
+        alert("Error connecting to server.");
+      }
+    });
+  }
+
+  // Reset Password Logic
+  const token = window.resetToken;
+
+  if (typeof token !== "undefined") {
     const newPasswordInput = document.getElementById("newPassword");
     const confirmPasswordInput = document.getElementById("confirmPassword");
     const resetBtn = document.getElementById("resetSubmit");
@@ -190,7 +184,6 @@ const token = window.resetToken;  // This will be dynamically injected by FastAP
         const newPassword = newPasswordInput.value.trim();
         const confirmPassword = confirmPasswordInput.value.trim();
 
-        // Validate the inputs
         if (!newPassword || !confirmPassword) {
           alert("Please fill in both fields.");
           return;
@@ -214,7 +207,7 @@ const token = window.resetToken;  // This will be dynamically injected by FastAP
 
           if (res.ok) {
             alert("Your password has been reset successfully!");
-            window.location.href = "https://texpray.onrender.com/login"; // Redirect to login page
+            window.location.href = "https://texpray.onrender.com/login";
           } else {
             alert(data.detail || "Error resetting password.");
           }
@@ -224,5 +217,5 @@ const token = window.resetToken;  // This will be dynamically injected by FastAP
         }
       });
     }
-
+  }
 });
