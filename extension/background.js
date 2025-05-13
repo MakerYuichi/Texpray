@@ -18,11 +18,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     // Store user info in chrome storage with error handling
     chrome.storage.local.set({
-      token: message.data.access_token,
+      access_token: message.data.access_token,
       user_name: message.data.user_name,
       user_id: message.data.user_id,
       user_karma: message.data.user_karma || 0,  // Default karma if not provided
     }, () => {
+      console.log("Received token:", message.data.access_token);
       if (chrome.runtime.lastError) {
         console.error("Error saving user data:", chrome.runtime.lastError);
         sendResponse({ status: "error", message: "Failed to save user data" });
@@ -46,6 +47,44 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   }
+
+  if (message.type === "MODERATE_MESSAGE") {
+  const { message: msg, token } = message.payload;
+
+  // Retrieve user_id from chrome storage
+  chrome.storage.local.get(["user_id"], (result) => {
+    const user_id = result.user_id;
+    
+    if (!user_id) {
+      sendResponse({ error: "User ID is not found in storage" });
+      return;
+    }
+
+    fetch("https://texpray.onrender.com/moderate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ mssg: msg, user_id: user_id })
+    })
+      .then(res => res.json().then(data => ({ status: res.status, ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        if (!ok) {
+          sendResponse({ error: "Server responded with error", data });
+        } else {
+          sendResponse({ data });
+        }
+      })
+      .catch(err => {
+        sendResponse({ error: err.message });
+      });
+  });
+
+  return true;  // Keep sendResponse async
+}
+
+
 });
 
 // Inside the extension's background script or service worker
@@ -61,7 +100,7 @@ chrome.declarativeNetRequest.updateDynamicRules({
         }
       },
       condition: {
-        urlFilter: "texpray.render.com/auth/signup.html",
+        urlFilter: "texpray.onrender.com/auth/signup.html",
         resourceTypes: ["main_frame"]
       }
     }

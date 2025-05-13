@@ -10,7 +10,10 @@
     "declarativeNetRequest"
   ],
   "host_permissions": [
-    "https://texpray.onrender.com/*"
+    "https://texpray.onrender.com/*",
+  "https://web.whatsapp.com/*",
+  "https://*.slack.com/*",
+  "https://*.teams.microsoft.com/*"
   ],
   "content_scripts": [
     {
