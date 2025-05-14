@@ -8,7 +8,7 @@ from sqlalchemy.future import select
 from uuid import uuid4
 
 
-async def moderate_text(user_id: str, mssg: str, db: AsyncSession) -> ModerationResponse:
+async def moderate_text(user_id: str, mssg: str, db: AsyncSession, is_override: bool = False) -> ModerationResponse:
     score, status = detect_toxicity(mssg)
     result = await db.execute(select(dailyKarma).where(dailyKarma.user_id == user_id))
     user_karma = result.scalars().first()
@@ -27,25 +27,29 @@ async def moderate_text(user_id: str, mssg: str, db: AsyncSession) -> Moderation
     reflection_id = None
 
     if status == 'toxic':
-        user_karma.karma -= 1.0
-        modified = True
-
         try:
             rephrased = rephrase_text(mssg)
             suggestion = rephrased[0] if rephrased else None
             alternatives = rephrased[1:3] if len(rephrased) > 1 else []
+            
         except Exception as e:
             print(f"Rephrasing failed: {e}")
-
-        reflection_id = uuid4()
-        reflection = pendingReflection(
-            reflection_id=reflection_id,
-            user_id=user_id,
-            original_message=mssg,
-            suggestion=suggestion
-        )
-        db.add(reflection)
-        modified=True
+            
+            
+        if not is_override:
+            reflection_id = uuid4()
+            reflection = pendingReflection(
+                reflection_id=reflection_id,
+                user_id=user_id,
+                original_message=mssg,
+                suggestion=suggestion
+                )
+            db.add(reflection)
+            modified=True
+            
+        if is_override:
+            user_karma.karma -= 1.0
+            modified = True
 
     else:
         if user_karma.boost_count is None:

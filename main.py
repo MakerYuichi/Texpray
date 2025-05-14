@@ -26,7 +26,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["chrome-extension://aggabpfpgjggoaeeimenoofbicdbboep", "https://texpray.onrender.com", "http://localhost:8000", "http://127.0.0.1:8000", "https://web.whatsapp.com",],  
+    allow_origins=["chrome-extension://aggabpfpgjggoaeeimenoofbicdbboep", "https://texpray.onrender.com", "http://localhost:8000", "http://127.0.0.1:8000", "https://web.whatsapp.com"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -168,7 +168,7 @@ async def reset_password(payload: PasswordReset, db: AsyncSession= Depends(get_d
 
 @app.post("/moderate", response_model=ModerationResponse)
 async def moderate_message(message: Message, db: AsyncSession = Depends(get_db), user_id: str = Depends(verify_access_token)):
-    return await moderate_text(user_id, message.mssg, db)
+    return await moderate_text(user_id, message.mssg, db, is_override = message.is_override)
 
 
 

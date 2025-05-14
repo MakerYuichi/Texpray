@@ -223,9 +223,7 @@ function showWarningUI(inputBox, message, reflectionId) {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            user_id,
-            original: message,
-            override: true
+            mssg: message,
           })
         });
         console.log("Override log sent to backend.");

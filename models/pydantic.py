@@ -6,8 +6,8 @@ from enum import Enum
 
 
 class Message(BaseModel):
-    user_id: str
     mssg : str
+    is_override: Optional[bool] = False
 
 class ModerationResponse(BaseModel):
     user_id : str
