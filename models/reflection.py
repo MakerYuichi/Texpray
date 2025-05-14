@@ -1,7 +1,6 @@
 from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Integer, func
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
-from datetime import datetime
 from models import Base
 
 class pendingReflection(Base):

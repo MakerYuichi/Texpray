@@ -95,6 +95,8 @@ if (activeSelector) {
                 response.data.status === "toxic" ||
                 response.data.toxicity_score >= 70
               ) {
+                const reflectionId = response.data.reflection_id
+                console.log("Reflection ID:", reflectionId);
                 showWarningUI(inputBox, cachedMessage, response.data.reflection_id);
               } else {
                 console.log("Message is clean. Proceed to send.");
@@ -111,51 +113,118 @@ if (activeSelector) {
   console.warn("Texspray: No matching selector for this site.");
 }
 
+async function showReflectionUI(originalMessage, reflectionId, inputBox) {
+  // Remove any existing overlay
+  const existing = document.getElementById("texspray-reflection-ui");
+  if (existing) existing.remove();
+
+  if (!reflectionId) {
+    console.error("Reflection ID is missing");
+    return; // Prevent further execution if reflectionId is undefined
+  }
+
+
+  // Fetch the rephrased alternatives from the backend
+  let rephrasedMessage = "";
+  try {
+
+    const { access_token } = await new Promise((resolve) =>
+            chrome.storage.local.get(["access_token"], resolve)
+          );
+
+    const response = await fetch(`https://texpray.onrender.com/reflect/${reflectionId}/alternatives`, {
+      headers: {Authorization: `Bearer ${access_token}`}
+    });
+    const data = await response.json();
+    if (data && data.alternatives && data.alternatives.length > 0) {
+      rephrasedMessage = data.alternatives.join(' / ');
+    } else {
+      rephrasedMessage = "No rephrased alternatives found.";
+    }
+  } catch (error) {
+    console.error("Failed to fetch reflection alternatives:", error);
+    rephrasedMessage = "Error fetching rephrased alternatives.";
+  }
+
+  // Create the overlay element
+  const overlay = document.createElement("div");
+  overlay.id = "texspray-reflection-ui";
+  overlay.style.position = "fixed";
+  overlay.style.top = 0;
+  overlay.style.left = 0;
+  overlay.style.width = "100vw";
+  overlay.style.height = "100vh";
+  overlay.style.background = "rgba(0,0,0,0.75)";
+  overlay.style.display = "flex";
+  overlay.style.alignItems = "center";
+  overlay.style.justifyContent = "center";
+  overlay.style.zIndex = 9999;
+
+  // Construct the overlay HTML with original and rephrased messages
+  overlay.innerHTML = `
+    <div style="background:white; padding:20px; max-width:500px; border-radius:10px; text-align:left; font-family:sans-serif">
+      <h2 style="margin-top:0">Think Before You Send</h2>
+      <p><strong>Original:</strong> ${originalMessage}</p>
+      <p><strong>Rephrased:</strong> ${rephrasedMessage}</p>
+      <p>💬 How might this message be received? Is this how you'd like to be remembered?</p>
+      <button id="confirm-rephrased-send" style="margin-top:10px; background:#25D366; border:none; padding:10px 15px; color:white; border-radius:5px; cursor:pointer">Send Rephrased Message</button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  // Add Escape key listener properly
+  const escHandler = (e) => {
+    if (e.key === "Escape") {
+      overlay.remove();
+      document.removeEventListener("keydown", escHandler);
+    }
+  };
+  document.addEventListener("keydown", escHandler);
+
+  document.getElementById("confirm-rephrased-send").onclick = () => {
+    sendMessageManually(inputBox, rephrasedMessage);
+    overlay.remove();
+    document.removeEventListener("keydown", escHandler);
+  };
+}
+
+
+
 // === Send message manually ===
 function sendMessageManually(inputBox, message = "") {
+  // Step 1: Focus the input box
   inputBox.focus();
 
-  // Clear old content
-  inputBox.innerText = "";
-  inputBox.textContent = "";
+  // Step 2: Set message via native React-compatible way
+  inputBox.textContent = message;
 
-  // Set new content
-  inputBox.innerText = message;
-
-  // Trigger input event
+  // Step 3: Dispatch a real input event so React knows something changed
   inputBox.dispatchEvent(
-    new InputEvent("input", {
+    new Event("input", {
       bubbles: true,
       cancelable: true,
-      inputType: "insertText",
-      data: message
     })
   );
 
+  // Step 4: Wait and simulate click on the send button
   setTimeout(() => {
-    const keyDown = new KeyboardEvent("keydown", {
-      key: "Enter",
-      code: "Enter",
-      keyCode: 13,
-      which: 13,
-      bubbles: true,
-      cancelable: true
-    });
-
-    const keyUp = new KeyboardEvent("keyup", {
-      key: "Enter",
-      code: "Enter",
-      keyCode: 13,
-      which: 13,
-      bubbles: true,
-      cancelable: true
-    });
-
-    inputBox.dispatchEvent(keyDown);
-    inputBox.dispatchEvent(keyUp);
-
-    console.log("Simulated Enter key to send message.");
-  }, 100);
+    const sendBtn = document.querySelector('span[data-icon="send"], div[aria-label="Send"]');
+    if (sendBtn) {
+      sendBtn.click();
+      console.log("Clicked WhatsApp send button.");
+    } else {
+      console.warn("Send button not found. Trying Enter key fallback.");
+      const keyDown = new KeyboardEvent("keydown", {
+        key: "Enter",
+        code: "Enter",
+        keyCode: 13,
+        which: 13,
+        bubbles: true,
+      });
+      inputBox.dispatchEvent(keyDown);
+    }
+  }, 150);
 }
 
 // === Show warning UI ===
@@ -196,7 +265,9 @@ function showWarningUI(inputBox, message, reflectionId) {
     .getElementById("rephraseBtn")
     .addEventListener("click", () => {
       console.log("User chose to rephrase");
-      alert("Rephrase feature coming soon.");
+      showReflectionUI(message, reflectionId, inputBox);
+      console.log("Reflection ID:", reflectionId);
+      warningBox.remove(); 
     });
 
   document
@@ -224,6 +295,7 @@ function showWarningUI(inputBox, message, reflectionId) {
           },
           body: JSON.stringify({
             mssg: message,
+            is_override: true
           })
         });
         console.log("Override log sent to backend.");
