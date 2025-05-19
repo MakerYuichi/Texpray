@@ -15,7 +15,7 @@ const observeDOM = (selector, callback) => {
       observer.disconnect();
       callback(inputBox);
       console.log("Hooked into inputBox:", inputBox);
-    }
+    } 
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
@@ -55,7 +55,7 @@ if (activeSelector) {
           if (forceSend) {
             forceSend = false;
             console.log("Force send triggered. Skipping moderation.");
-            return; // Allow native send
+            return;
           }
 
           e.preventDefault();
@@ -95,9 +95,9 @@ if (activeSelector) {
                 response.data.status === "toxic" ||
                 response.data.toxicity_score >= 70
               ) {
-                const reflectionId = response.data.reflection_id
+                const reflectionId = response.data.reflection_id;
                 console.log("Reflection ID:", reflectionId);
-                showWarningUI(inputBox, cachedMessage, response.data.reflection_id);
+                showWarningUI(inputBox, cachedMessage, reflectionId);
               } else {
                 console.log("Message is clean. Proceed to send.");
                 sendMessageManually(inputBox, cachedMessage);
@@ -113,118 +113,141 @@ if (activeSelector) {
   console.warn("Texspray: No matching selector for this site.");
 }
 
+// === Show Reflection UI ===
 async function showReflectionUI(originalMessage, reflectionId, inputBox) {
-  // Remove any existing overlay
   const existing = document.getElementById("texspray-reflection-ui");
   if (existing) existing.remove();
 
   if (!reflectionId) {
     console.error("Reflection ID is missing");
-    return; // Prevent further execution if reflectionId is undefined
+    return;
   }
 
-
-  // Fetch the rephrased alternatives from the backend
-  let rephrasedMessage = "";
+  let rephrasedMessageHTML = "";
   try {
-
     const { access_token } = await new Promise((resolve) =>
-            chrome.storage.local.get(["access_token"], resolve)
-          );
+      chrome.storage.local.get(["access_token"], resolve)
+    );
 
     const response = await fetch(`https://texpray.onrender.com/reflect/${reflectionId}/alternatives`, {
-      headers: {Authorization: `Bearer ${access_token}`}
+      headers: { Authorization: `Bearer ${access_token}` }
     });
+
     const data = await response.json();
-    if (data && data.alternatives && data.alternatives.length > 0) {
-      rephrasedMessage = data.alternatives.join(' / ');
+    if (data?.alternatives?.length > 0) {
+      rephrasedMessageHTML = data.alternatives
+        .map(
+          (alt) => 
+          `<button class="texspray-alt-btn" data-alt="${encodeURIComponent(alt)}"
+            style="display:block; margin:6px 0; padding:8px; background:#f0f0f0; border:none; border-radius:5px; cursor:pointer;">
+            ${alt}
+          </button>`
+        )
+        .join("");
     } else {
-      rephrasedMessage = "No rephrased alternatives found.";
+      rephrasedMessageHTML = "No rephrased alternatives found.";
     }
   } catch (error) {
     console.error("Failed to fetch reflection alternatives:", error);
-    rephrasedMessage = "Error fetching rephrased alternatives.";
+    rephrasedMessageHTML = "Error fetching rephrased alternatives.";
   }
 
-  // Create the overlay element
   const overlay = document.createElement("div");
   overlay.id = "texspray-reflection-ui";
-  overlay.style.position = "fixed";
-  overlay.style.top = 0;
-  overlay.style.left = 0;
-  overlay.style.width = "100vw";
-  overlay.style.height = "100vh";
-  overlay.style.background = "rgba(0,0,0,0.75)";
-  overlay.style.display = "flex";
-  overlay.style.alignItems = "center";
-  overlay.style.justifyContent = "center";
-  overlay.style.zIndex = 9999;
+  overlay.style = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  `;
 
-  // Construct the overlay HTML with original and rephrased messages
   overlay.innerHTML = `
-    <div style="background:white; padding:20px; max-width:500px; border-radius:10px; text-align:left; font-family:sans-serif">
+    <div style="background:white; padding:20px; max-width:500px; border-radius:10px; font-family:sans-serif">
       <h2 style="margin-top:0">Think Before You Send</h2>
       <p><strong>Original:</strong> ${originalMessage}</p>
-      <p><strong>Rephrased:</strong> ${rephrasedMessage}</p>
-      <p>💬 How might this message be received? Is this how you'd like to be remembered?</p>
-      <button id="confirm-rephrased-send" style="margin-top:10px; background:#25D366; border:none; padding:10px 15px; color:white; border-radius:5px; cursor:pointer">Send Rephrased Message</button>
+      <p><strong>Choose a Rephrased Message:</strong></p>
+      <div>${rephrasedMessageHTML}</div>
+      <button id="cancel-reflection" style="margin-top:10px; background:#ccc; border:none; padding:10px 15px; border-radius:5px; cursor:pointer">
+        Cancel
+      </button>
     </div>
   `;
 
   document.body.appendChild(overlay);
 
-  // Add Escape key listener properly
+  console.log("Rendered rephrased buttons:", document.querySelectorAll(".texspray-alt-btn"));
+
+  document.querySelectorAll(".texspray-alt-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const newMessage = decodeURIComponent(btn.dataset.alt);
+      console.log("Clicked alternative message:", newMessage);
+
+      overlay.remove();
+      document.removeEventListener("keydown", escHandler);
+
+      // Clear existing content safely
+      inputBox.focus();
+      inputBox.textContent = newMessage;
+
+// Dispatch proper input event to trigger lexical/react updates
+     const inputEvent = new InputEvent('input', {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      inputType: 'insertText',
+      data: newMessage
+    });
+    
+    inputBox.dispatchEvent(inputEvent);
+
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      forceSend = true;
+
+      const sendButton = document.querySelector('[aria-label="Send"], [data-testid="send-button"]');
+      if (sendButton) {
+        sendButton.click();
+        console.log('Sent via send button click');
+      } else {
+        const enterEvent = new KeyboardEvent('keydown', {
+          key: 'Enter',
+          code: 'Enter',
+          keyCode: 13,
+          which: 13,
+          bubbles: true,
+          cancelable: true,
+          composed: true
+        });
+        inputBox.dispatchEvent(enterEvent);
+        console.log('Sent via Enter key simulation');
+      }
+    });
+  });
+
   const escHandler = (e) => {
     if (e.key === "Escape") {
       overlay.remove();
-      document.removeEventListener("keydown", escHandler);
+      restoreWarningUI(originalMessage, reflectionId, inputBox);
     }
   };
+
   document.addEventListener("keydown", escHandler);
 
-  document.getElementById("confirm-rephrased-send").onclick = () => {
-    sendMessageManually(inputBox, rephrasedMessage);
+  document.getElementById("cancel-reflection").onclick = () => {
     overlay.remove();
     document.removeEventListener("keydown", escHandler);
+    restoreWarningUI(originalMessage, reflectionId, inputBox);
   };
-}
-
-
-
-// === Send message manually ===
-function sendMessageManually(inputBox, message = "") {
-  // Step 1: Focus the input box
-  inputBox.focus();
-
-  // Step 2: Set message via native React-compatible way
-  inputBox.textContent = message;
-
-  // Step 3: Dispatch a real input event so React knows something changed
-  inputBox.dispatchEvent(
-    new Event("input", {
-      bubbles: true,
-      cancelable: true,
-    })
-  );
-
-  // Step 4: Wait and simulate click on the send button
-  setTimeout(() => {
-    const sendBtn = document.querySelector('span[data-icon="send"], div[aria-label="Send"]');
-    if (sendBtn) {
-      sendBtn.click();
-      console.log("Clicked WhatsApp send button.");
-    } else {
-      console.warn("Send button not found. Trying Enter key fallback.");
-      const keyDown = new KeyboardEvent("keydown", {
-        key: "Enter",
-        code: "Enter",
-        keyCode: 13,
-        which: 13,
-        bubbles: true,
-      });
-      inputBox.dispatchEvent(keyDown);
-    }
-  }, 150);
 }
 
 // === Show warning UI ===
@@ -261,50 +284,106 @@ function showWarningUI(inputBox, message, reflectionId) {
     console.warn("Texspray: Unable to find container to inject warning UI.");
   }
 
-  document
-    .getElementById("rephraseBtn")
-    .addEventListener("click", () => {
-      console.log("User chose to rephrase");
-      showReflectionUI(message, reflectionId, inputBox);
-      console.log("Reflection ID:", reflectionId);
-      warningBox.remove(); 
-    });
+  document.getElementById("rephraseBtn").addEventListener("click", () => {
+    console.log("User chose to rephrase");
+    showReflectionUI(message, reflectionId, inputBox);
+    warningBox.remove();
+  });
 
-  document
-    .getElementById("deleteBtn")
-    .addEventListener("click", () => {
-      inputBox.innerText = "";
-      warningBox.remove();
-    });
+  document.getElementById("deleteBtn").addEventListener("click", () => {
+    inputBox.innerText = "";
+    warningBox.remove();
+  });
 
-  document
-    .getElementById("sendAnywayBtn")
-    .addEventListener("click", async () => {
-      console.log("User chose to send anyway");
+  document.getElementById("sendAnywayBtn").addEventListener("click", async () => {
+    console.log("User chose to send anyway");
 
-      const { access_token, user_id } = await new Promise((resolve) =>
-        chrome.storage.local.get(["access_token", "user_id"], resolve)
-      );
+    const { access_token, user_id } = await new Promise((resolve) =>
+      chrome.storage.local.get(["access_token", "user_id"], resolve)
+    );
 
-      try {
-        await fetch("https://texpray.onrender.com/moderate", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${access_token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            mssg: message,
-            is_override: true
-          })
-        });
-        console.log("Override log sent to backend.");
-      } catch (err) {
-        console.error("Failed to log override to backend:", err);
-      }
+    try {
+      await fetch("https://texpray.onrender.com/moderate", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          mssg: message,
+          is_override: true
+        })
+      });
+      console.log("Override log sent to backend.");
+    } catch (err) {
+      console.error("Failed to log override to backend:", err);
+    }
 
-      warningBox.remove();
-      forceSend = true;
-      sendMessageManually(inputBox, message);
-    });
+    warningBox.remove();
+    forceSend = true;
+    sendMessageManually(inputBox, message);
+  });
+}
+
+// === Send message manually ===
+function sendMessageManually(inputBox, message = "") {
+  inputBox.focus();
+  inputBox.focus();
+
+// Clear selection and update content
+const selection = window.getSelection();
+selection.removeAllRanges();
+
+const range = document.createRange();
+range.selectNodeContents(inputBox);
+range.collapse(false);
+selection.addRange(range);
+
+// Update text content
+inputBox.textContent = message;
+
+// Fire beforeinput (Lexical listens to this)
+const beforeInputEvent = new InputEvent('beforeinput', {
+  bubbles: true,
+  cancelable: true,
+  composed: true,
+  inputType: 'insertText',
+  data: message
+});
+inputBox.dispatchEvent(beforeInputEvent);
+
+// Fire input event (with correct data payload)
+const inputEvent = new InputEvent('input', {
+  bubbles: true,
+  cancelable: true,
+  composed: true,
+  inputType: 'insertText',
+  data: message
+});
+inputBox.dispatchEvent(inputEvent);
+console.log("Inserted rephrased message:", message);
+
+
+  setTimeout(() => {
+    const sendBtn = document.querySelector('span[data-icon="send"], div[aria-label="Send"]');
+    if (sendBtn) {
+      sendBtn.click();
+      console.log("Clicked WhatsApp send button.");
+    } else {
+      const enterEvent = new KeyboardEvent("keydown", {
+        key: "Enter",
+        code: "Enter",
+        keyCode: 13,
+        which: 13,
+        bubbles: true,
+      });
+      inputBox.dispatchEvent(enterEvent);
+      console.log("Fallback: triggered Enter key event.");
+    }
+  }, 250);
+}
+
+function restoreWarningUI(message, reflectionId, inputBox) {
+  console.log("Restoring warning UI after cancel");
+  showWarningUI(inputBox, message, reflectionId);
 }
